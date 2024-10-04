@@ -34,3 +34,10 @@ The setup is build on top of Matt DesLauriers' <a href="https://github.com/mattd
 <p>Start the export with the command <code>CMD+SHIFT+S</code> in your browser and stop with hitting the same command <code>CMD+SHIFT+S</code> again and the tool will export a .MP4 video to your Downloads folder</p>
 
 <p>Note: to export to video, you need <code>ffmpeg</code> installed in your system. If canvas-sketch can't find ffmpeg installed, it will default by downloading a PNG sequence. More info <a href="https://github.com/mattdesl/canvas-sketch/blob/master/docs/exporting-artwork.md">here</a>.</p>
+
+<h2>Questions? Wanna reach out?</h2>
+<p>
+  <a href="https://www.instagram.com/burogutter/">@burogutter</a><br/>
+  <a href="mailto:hello@burogutter.com">hello@burogutter.com</a>
+</p>
+<p>✌️</p>
