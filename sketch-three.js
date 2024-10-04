@@ -27,8 +27,6 @@ const gui = {
   speed: 0.02,
   repeatX: 10.0,
   repeatY: 10.0,
-  smoothStepX: -6.0,
-  smoothStepY: 2.0,
   rotateSpeedX: 0,
   rotateSpeedY: 0,
   rotateSpeedZ: 0,
@@ -37,12 +35,8 @@ const gui = {
   scaleX: 1,
   scaleY: 1,
   scaleZ: 1,
-  orbit: true,
-  cameraX: 0,
-  cameraY: 0,
-  cameraZ: 0,
   type: false,
-  url: 'https://images.unsplash.com/photo-1727458880307-fd23422c2528?q=80&w=4287&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+  url: 'https://images.unsplash.com/photo-1663544093468-034ff949fcdd?q=80&w=2400&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
 };
 
 const settings = {
@@ -54,6 +48,7 @@ const settings = {
 
 const sketch = ({ context }) => {
   document.body.style.backgroundColor = gui.globalBg;
+
   const renderer = new THREE.WebGLRenderer({
     context,
   });
@@ -73,9 +68,7 @@ const sketch = ({ context }) => {
   geometry = new THREE.TorusGeometry(19, 19, 500, 500);
 
   const img = gui.url;
-
   texture = new THREE.TextureLoader().load(img, (texture) => {
-    console.log(texture);
     texture.minFilter = THREE.NearestFilter;
   });
 
@@ -91,18 +84,11 @@ const sketch = ({ context }) => {
     },
     render({ deltaTime }) {
       renderer.render(scene, camera);
+      controls.update();
 
       mesh.rotation.x += deltaTime * ((gui.rotateSpeedX * Math.PI) / 180);
       mesh.rotation.y += deltaTime * ((gui.rotateSpeedY * Math.PI) / 180);
       mesh.rotation.z += deltaTime * ((gui.rotateSpeedZ * Math.PI) / 180);
-
-      if (gui.orbit) {
-        controls.update();
-      } else {
-        camera.position.x = gui.cameraX;
-        camera.position.y = gui.cameraY;
-        camera.position.z = gui.cameraZ;
-      }
 
       customMaterial.uniforms.uDistortionValue.value = gui.distortionValue;
       customMaterial.uniforms.uDistort.value = gui.distort;
@@ -115,33 +101,6 @@ const sketch = ({ context }) => {
       renderer.dispose();
     },
   };
-};
-
-const createMesh = () => {
-  if (mesh) {
-    scene.remove(mesh);
-  }
-  customMaterial = new THREE.ShaderMaterial({
-    vertexShader,
-    fragmentShader,
-    uniforms: {
-      uTime: { value: 0.0 },
-      uTexture: { value: texture },
-      uDistort: { value: gui.distort },
-      uDistortionValue: { value: gui.distortionValue },
-      uRepeatX: { value: gui.repeatX },
-      uRepeatY: { value: gui.repeatY },
-      uSmoothStepX: { value: gui.smoothStepX },
-      uSmoothStepY: { value: gui.smoothStepY },
-      uType: { value: gui.type },
-    },
-    side: THREE.DoubleSide,
-    transparent: false,
-    wireframe: false,
-  });
-
-  mesh = new THREE.Mesh(geometry, customMaterial);
-  scene.add(mesh);
 };
 
 const debug = (renderer) => {
@@ -159,8 +118,8 @@ const debug = (renderer) => {
       renderer.setClearColor(new Color(e.value));
     });
 
-  const folderMesh = pane.addFolder({ title: 'Mesh' });
-  folderMesh
+  const folderGeometry = pane.addFolder({ title: 'Geometry' });
+  folderGeometry
     .addInput(gui, 'shape', {
       label: 'Shape',
       options: {
@@ -223,12 +182,13 @@ const debug = (renderer) => {
       }
       createMesh();
     });
-  folderMesh
+
+  folderGeometry
     .addInput(gui, 'distort', { label: 'Distortion' })
     .on('change', (e) => {
       gui.distort = e.value;
     });
-  folderMesh
+  folderGeometry
     .addInput(gui, 'distortionValue', {
       label: 'Distortion value',
       min: 0.01,
@@ -237,45 +197,47 @@ const debug = (renderer) => {
     .on('change', (e) => {
       gui.distortionValue = e.value;
     });
-  folderMesh.addInput(gui, 'rotateSpeedX', {
+
+  const folderCamera = pane.addFolder({ title: 'Camera' });
+  folderCamera.addInput(gui, 'rotateSpeedX', {
     label: 'Rotate X',
     min: 0,
     max: 100,
   });
 
-  folderMesh.addInput(gui, 'rotateSpeedY', {
+  folderCamera.addInput(gui, 'rotateSpeedY', {
     label: 'Rotate Y',
     min: 0,
     max: 100,
   });
 
-  folderMesh.addInput(gui, 'rotateSpeedZ', {
+  folderCamera.addInput(gui, 'rotateSpeedZ', {
     label: 'Rotate Z',
     min: 0,
     max: 100,
   });
 
-  folderMesh
+  folderCamera
     .addInput(gui, 'scaleX', { label: 'Scale X', min: 0.1, max: 2 })
     .on('change', (e) => {
       mesh.scale.x = e.value;
       gui.scaleX = e.value;
     });
-  folderMesh
+  folderCamera
     .addInput(gui, 'scaleY', { label: 'Scale Y', min: 0.1, max: 2 })
     .on('change', (e) => {
       mesh.scale.y = e.value;
       gui.scaleY = e.value;
     });
-  folderMesh
+  folderCamera
     .addInput(gui, 'scaleZ', { label: 'Scale Z', min: 0.1, max: 2 })
     .on('change', (e) => {
       mesh.scale.z = e.value;
       gui.scaleZ = e.value;
     });
 
-  const folderTexture = pane.addFolder({ title: 'Texture' });
-  folderTexture
+  const folderMaterial = pane.addFolder({ title: 'Material' });
+  folderMaterial
     .addInput(gui, 'url', {
       label: 'Image',
       view: 'input-image',
@@ -295,7 +257,7 @@ const debug = (renderer) => {
       }
     });
 
-  folderTexture
+  folderMaterial
     .addInput(gui, 'type', {
       label: 'Type',
       options: {
@@ -307,29 +269,50 @@ const debug = (renderer) => {
       gui.type = e.value;
     });
 
-  folderTexture.addInput(gui, 'repeatX', {
+  folderMaterial.addInput(gui, 'repeatX', {
     label: 'Repeat X',
     min: 0.01,
     max: 50,
   });
-
-  folderTexture.addInput(gui, 'repeatY', {
+  folderMaterial.addInput(gui, 'repeatY', {
     label: 'Repeat Y',
     min: 0.01,
     max: 50,
   });
 
-  folderTexture.addInput(gui, 'smoothStepX', {
-    label: 'Smooth X',
-    min: -12,
-    max: 12,
+  const folderAnimation = pane.addFolder({ title: 'Animation' });
+  folderAnimation.addInput(gui, 'speed', {
+    label: 'Speed',
+    min: 0.001,
+    max: 1,
   });
-  folderTexture.addInput(gui, 'smoothStepY', {
-    label: 'Smooth Y',
-    min: -12,
-    max: 12,
+};
+
+const createMesh = () => {
+  if (mesh) {
+    scene.remove(mesh);
+  }
+  customMaterial = new THREE.ShaderMaterial({
+    vertexShader,
+    fragmentShader,
+    uniforms: {
+      uTime: { value: 0.0 },
+      uTexture: { value: texture },
+      uDistort: { value: gui.distort },
+      uDistortionValue: { value: gui.distortionValue },
+      uRepeatX: { value: gui.repeatX },
+      uRepeatY: { value: gui.repeatY },
+      uSmoothStepX: { value: gui.smoothStepX },
+      uSmoothStepY: { value: gui.smoothStepY },
+      uType: { value: gui.type },
+    },
+    side: THREE.DoubleSide,
+    transparent: false,
+    wireframe: false,
   });
-  folderTexture.addInput(gui, 'speed', { label: 'Speed', min: 0.001, max: 1 });
+
+  mesh = new THREE.Mesh(geometry, customMaterial);
+  scene.add(mesh);
 };
 
 canvasSketch(sketch, settings);
